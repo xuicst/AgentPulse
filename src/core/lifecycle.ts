@@ -6,6 +6,8 @@ import { EventBus } from "./eventBus";
 import { AgentEventType } from "./events";
 import { DetectorManager } from "../detectors/detectorManager";
 import { MockDetector } from "../detectors/mockDetector";
+import { NotifierManager } from "../notifications/notifierManager";
+import { MockNotifier } from "../notifications/mockNotifier";
 
 export class Lifecycle {
     private readonly disposables: vscode.Disposable[] = [];
@@ -14,6 +16,7 @@ export class Lifecycle {
     private statusBar?: StatusBarManager;
     private readonly eventBus = EventBus.getInstance();
     private readonly detectorManager = new DetectorManager();
+    private readonly notifierManager = new NotifierManager();
 
     public async initialize(context: vscode.ExtensionContext): Promise<void> {
         if (!this.config.isEnabled()) {
@@ -44,8 +47,11 @@ export class Lifecycle {
             })
         );
 
-        this.eventBus.subscribe((event) => {
+        this.notifierManager.register(new MockNotifier());
+
+        this.eventBus.subscribe(async (event) => {
             this.logger.info(`[${event.source}] ${event.type}`);
+            await this.notifierManager.notifyAll(event);
         });
 
         context.subscriptions.push(...this.disposables);
@@ -68,7 +74,7 @@ export class Lifecycle {
         for (const disposable of this.disposables) {
             disposable.dispose();
         }
-
+        this.notifierManager.dispose();
         this.logger.dispose();
     }
 }
