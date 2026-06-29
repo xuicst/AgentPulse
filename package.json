@@ -1,0 +1,61 @@
+{
+  "name": "AgentPulse",
+  "displayName": "AgentPulse",
+  "description": "AI Agent Notification Framework for VSCode",
+  "version": "0.1.0",
+  "publisher": "xuicst",
+  "license": "MIT",
+
+  "engines": {
+    "vscode": "^1.102.0"
+  },
+
+  "categories": [
+    "Other"
+  ],
+
+  "keywords": [
+    "ai",
+    "claude",
+    "codex",
+    "notification",
+    "agent",
+    "framework"
+  ],
+
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "agentPulse.showOutput",
+        "title": "AgentPulse: Show Output"
+      },
+      {
+        "command": "agentPulse.restart",
+        "title": "AgentPulse: Restart"
+      },
+      {
+        "command": "agentPulse.about",
+        "title": "AgentPulse: About"
+      }
+    ]
+  },
+
+  "scripts": {
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "vsce package"
+  },
+
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/vscode": "^1.102.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.0",
+    "@vscode/vsce": "^3.6.0"
+  }
+}
