@@ -2,12 +2,15 @@ import * as vscode from "vscode";
 import { Logger } from "./logger";
 import { ConfigManager } from "./config";
 import { StatusBarManager } from "../ui/statusBar";
+import { EventBus } from "./eventBus";
+import { AgentEventType } from "./events";
 
 export class Lifecycle {
     private readonly disposables: vscode.Disposable[] = [];
     private readonly logger = Logger.getInstance();
     private readonly config = new ConfigManager();
     private statusBar?: StatusBarManager;
+    private readonly eventBus = EventBus.getInstance();
 
     public async initialize(context: vscode.ExtensionContext): Promise<void> {
         if (!this.config.isEnabled()) {
@@ -37,6 +40,10 @@ export class Lifecycle {
                 );
             })
         );
+
+        this.eventBus.subscribe((event) => {
+            this.logger.info(`[${event.source}] ${event.type}`);
+        });
 
         context.subscriptions.push(...this.disposables);
         this.logger.info("AgentPulse initialized.");
