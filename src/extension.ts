@@ -10,7 +10,7 @@ export async function activate(
     await lifecycle.initialize(context);
 }
 
-export function deactivate(): void {
-    lifecycle?.dispose();
+export async function deactivate(): Promise<void> {
+    await lifecycle?.dispose();
     lifecycle = undefined;
 }

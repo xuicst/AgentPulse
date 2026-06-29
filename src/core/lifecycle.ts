@@ -4,6 +4,8 @@ import { ConfigManager } from "./config";
 import { StatusBarManager } from "../ui/statusBar";
 import { EventBus } from "./eventBus";
 import { AgentEventType } from "./events";
+import { DetectorManager } from "../detectors/detectorManager";
+import { MockDetector } from "../detectors/mockDetector";
 
 export class Lifecycle {
     private readonly disposables: vscode.Disposable[] = [];
@@ -11,6 +13,7 @@ export class Lifecycle {
     private readonly config = new ConfigManager();
     private statusBar?: StatusBarManager;
     private readonly eventBus = EventBus.getInstance();
+    private readonly detectorManager = new DetectorManager();
 
     public async initialize(context: vscode.ExtensionContext): Promise<void> {
         if (!this.config.isEnabled()) {
@@ -47,13 +50,25 @@ export class Lifecycle {
 
         context.subscriptions.push(...this.disposables);
         this.logger.info("AgentPulse initialized.");
+        
+        this.eventBus.publish({
+            source: "system",
+            type: AgentEventType.Started,
+            timestamp: Date.now()
+        });
+
+        this.detectorManager.register(new MockDetector());
+        await this.detectorManager.activateAll();
     }
 
-    public dispose(): void {
+    public async dispose(): Promise<void> {
         this.logger.info("AgentPulse disposing...");
+        await this.detectorManager.deactivateAll();
+
         for (const disposable of this.disposables) {
             disposable.dispose();
         }
+
         this.logger.dispose();
     }
 }
