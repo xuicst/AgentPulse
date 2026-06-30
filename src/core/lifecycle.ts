@@ -54,7 +54,11 @@ export class Lifecycle {
             await this.notifierManager.notifyAll(event);
         });
 
+        this.detectorManager.register(new MockDetector());
+        await this.detectorManager.activateAll();
+
         context.subscriptions.push(...this.disposables);
+        
         this.logger.info("AgentPulse initialized.");
         
         this.eventBus.publish({
@@ -62,19 +66,16 @@ export class Lifecycle {
             type: AgentEventType.Started,
             timestamp: Date.now()
         });
-
-        this.detectorManager.register(new MockDetector());
-        await this.detectorManager.activateAll();
     }
 
     public async dispose(): Promise<void> {
         this.logger.info("AgentPulse disposing...");
         await this.detectorManager.deactivateAll();
-
+        this.notifierManager.dispose();
         for (const disposable of this.disposables) {
             disposable.dispose();
         }
-        this.notifierManager.dispose();
+        this.eventBus.dispose();
         this.logger.dispose();
     }
 }
