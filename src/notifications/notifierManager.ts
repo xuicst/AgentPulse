@@ -1,35 +1,37 @@
 import { AgentEvent } from "../core/events";
 import { Logger } from "../core/logger";
-import { INotifier } from "../types";
+import { INotificationService } from "./NotificationService";
 
 export class NotifierManager {
     private readonly logger = Logger.getInstance();
-    private readonly notifiers = new Map<string, INotifier>();
+    private readonly services = new Map<string, INotificationService>();
 
-    public register(notifier: INotifier): void {
-        if (this.notifiers.has(notifier.id)) {
-            throw new Error(`Notifier '${notifier.id}' already registered.`);
+    public register(service: INotificationService): void {
+        if (this.services.has(service.id)) {
+            throw new Error(`Notification service '${service.id}' already registered.`);
         }
-        this.notifiers.set(notifier.id, notifier);
-        this.logger.info(`Notifier registered: ${notifier.displayName}`);
+
+        this.services.set(service.id, service);
+        this.logger.info(`Notification service registered: ${service.displayName}`);
     }
 
     public async notifyAll(event: AgentEvent): Promise<void> {
-        for (const notifier of this.notifiers.values()) {
+        for (const service of this.services.values()) {
             try {
-                await notifier.notify(event);
+                await service.notify(event);
             } catch (error) {
                 this.logger.error(
-                    `Notifier failed: ${notifier.displayName} - ${String(error)}`
+                    `Notification service failed: ${service.displayName} - ${String(error)}`
                 );
             }
         }
     }
 
     public dispose(): void {
-        for (const notifier of this.notifiers.values()) {
-            notifier.dispose?.();
+        for (const service of this.services.values()) {
+            service.dispose?.();
         }
-        this.notifiers.clear();
+
+        this.services.clear();
     }
 }

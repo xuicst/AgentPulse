@@ -36,6 +36,10 @@
       {
         "command": "agentPulse.about",
         "title": "AgentPulse: About"
+      },
+      {
+        "command": "agentPulse.testNotification",
+        "title": "AgentPulse: Test Notification"
       }
     ]
   },

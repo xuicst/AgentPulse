@@ -10,7 +10,7 @@ import { NotifierManager } from "../notifications/notifierManager";
 import { MockNotifier } from "../notifications/mockNotifier";
 import { SignalWatcher } from "../hooks/signalWatcher";
 import { getClaudeSignalFilePath } from "../hooks/signalPaths";
-import { WindowsNotifier } from "../notifications/windowsNotifier";
+// import { WindowsNotifier } from "../notifications/windowsNotifier";
 import { AgentPulseStatus } from "../ui/statusBar";
 
 export class Lifecycle {
@@ -45,15 +45,19 @@ export class Lifecycle {
             })
         );
         this.disposables.push(
-            vscode.commands.registerCommand("agentPulse.about", () => {
-                vscode.window.showInformationMessage(
-                    "AgentPulse v0.1.0 - AI Agent Notification Framework"
-                );
+            vscode.commands.registerCommand("agentPulse.testNotification", async () => {
+                this.logger.info("Test notification requested.");
+
+                this.eventBus.publish({
+                    source: "test",
+                    type: AgentEventType.WaitingPermission,
+                    timestamp: Date.now()
+                });
             })
         );
 
         this.notifierManager.register(new MockNotifier());
-        this.notifierManager.register(new WindowsNotifier());
+        // this.notifierManager.register(new WindowsNotifier());
 
         // this.eventBus.subscribe(async (event) => {
         //     this.logger.info(`[${event.source}] ${event.type}`);
