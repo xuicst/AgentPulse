@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { AgentEvent, AgentEventType } from "../core/events";
 
 export enum AgentPulseStatus {
     Idle = "idle",
@@ -39,6 +40,26 @@ export class StatusBarManager {
             default:
                 this.item.text = "$(zap) AgentPulse";
                 this.item.tooltip = "AgentPulse is ready";
+                break;
+        }
+    }
+
+    public updateByEvent(event: AgentEvent): void {
+        switch (event.type) {
+            case AgentEventType.WaitingPermission:
+                this.setStatus(AgentPulseStatus.WaitingPermission);
+                break;
+
+            case AgentEventType.Finished:
+                this.setStatus(AgentPulseStatus.Idle);
+                break;
+
+            case AgentEventType.Error:
+                this.setStatus(AgentPulseStatus.Error);
+                break;
+
+            default:
+                this.setStatus(AgentPulseStatus.Running);
                 break;
         }
     }

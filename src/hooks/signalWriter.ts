@@ -7,7 +7,6 @@ export function writeSignalFile(
     event: SignalFileEvent
 ): void {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
-
     fs.writeFileSync(
         filePath,
         JSON.stringify(event, null, 2),

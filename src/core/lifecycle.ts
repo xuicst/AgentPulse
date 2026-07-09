@@ -8,6 +8,10 @@ import { DetectorManager } from "../detectors/detectorManager";
 import { MockDetector } from "../detectors/mockDetector";
 import { NotifierManager } from "../notifications/notifierManager";
 import { MockNotifier } from "../notifications/mockNotifier";
+import { SignalWatcher } from "../hooks/signalWatcher";
+import { getClaudeSignalFilePath } from "../hooks/signalPaths";
+import { WindowsNotifier } from "../notifications/windowsNotifier";
+import { AgentPulseStatus } from "../ui/statusBar";
 
 export class Lifecycle {
     private readonly disposables: vscode.Disposable[] = [];
@@ -17,6 +21,7 @@ export class Lifecycle {
     private readonly eventBus = EventBus.getInstance();
     private readonly detectorManager = new DetectorManager();
     private readonly notifierManager = new NotifierManager();
+    private signalWatcher?: SignalWatcher;
 
     public async initialize(context: vscode.ExtensionContext): Promise<void> {
         if (!this.config.isEnabled()) {
@@ -48,10 +53,42 @@ export class Lifecycle {
         );
 
         this.notifierManager.register(new MockNotifier());
+        this.notifierManager.register(new WindowsNotifier());
+
+        // this.eventBus.subscribe(async (event) => {
+        //     this.logger.info(`[${event.source}] ${event.type}`);
+        //     await this.notifierManager.notifyAll(event);
+        // });
 
         this.eventBus.subscribe(async (event) => {
-            this.logger.info(`[${event.source}] ${event.type}`);
+
+            this.logger.info(
+                `[${event.source}] ${event.type}`
+            );
+
+            switch (event.type) {
+
+                case AgentEventType.WaitingPermission:
+                    this.statusBar?.setStatus(
+                        AgentPulseStatus.WaitingPermission
+                    );
+                    break;
+
+                case AgentEventType.Finished:
+                    this.statusBar?.setStatus(
+                        AgentPulseStatus.Idle
+                    );
+                    break;
+
+                case AgentEventType.Error:
+                    this.statusBar?.setStatus(
+                        AgentPulseStatus.Error
+                    );
+                    break;
+            }
+
             await this.notifierManager.notifyAll(event);
+
         });
 
         this.detectorManager.register(new MockDetector());
@@ -66,6 +103,25 @@ export class Lifecycle {
             type: AgentEventType.Started,
             timestamp: Date.now()
         });
+
+        this.signalWatcher = new SignalWatcher(
+            getClaudeSignalFilePath(),
+            () => {
+                this.logger.info("Claude signal file changed.");
+            }
+        );
+
+        this.signalWatcher.start();
+
+        setTimeout(() => {
+
+            this.eventBus.publish({
+                source: "claude",
+                type: AgentEventType.WaitingPermission,
+                timestamp: Date.now()
+            });
+
+        }, 3000);
     }
 
     public async dispose(): Promise<void> {
@@ -77,5 +133,6 @@ export class Lifecycle {
         }
         this.eventBus.dispose();
         this.logger.dispose();
+        this.signalWatcher?.stop();
     }
 }
