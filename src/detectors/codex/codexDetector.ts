@@ -65,13 +65,18 @@ export class CodexDetector extends BaseDetector {
 
             this.eventBus.publish(event);
         } catch (error) {
-            this.logger.error(
-                `Failed to process Codex signal: ${String(error)}`
+            this.logger.warn(
+                `Codex signal temporarily unavailable: ${String(error)}`
             );
-
-            this.publish(AgentEventType.Error, {
-                error: String(error)
-            });
         }
+        // } catch (error) {
+        //     this.logger.error(
+        //         `Failed to process Codex signal: ${String(error)}`
+        //     );
+
+        //     this.publish(AgentEventType.Error, {
+        //         error: String(error)
+        //     });
+        // }
     }
 }
