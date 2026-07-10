@@ -13,6 +13,8 @@ import { getClaudeSignalFilePath } from "../hooks/signalPaths";
 import { WindowsNotifier } from "../notifications/windowsNotifier";
 import { AgentPulseStatus } from "../ui/statusBar";
 import { registerWindowsAumid } from "../notifications/windowsAumid";
+import { CodexDetector } from "../detectors/codex/codexDetector";
+import { getCodexSignalFilePath } from "../hooks/signalPaths";
 
 export class Lifecycle {
     private readonly disposables: vscode.Disposable[] = [];
@@ -100,7 +102,10 @@ export class Lifecycle {
 
         });
 
-        this.detectorManager.register(new MockDetector());
+        // this.detectorManager.register(new MockDetector());
+        this.detectorManager.register(
+            new CodexDetector(getCodexSignalFilePath())
+        );
         await this.detectorManager.activateAll();
 
         context.subscriptions.push(...this.disposables);
@@ -113,24 +118,14 @@ export class Lifecycle {
             timestamp: Date.now()
         });
 
-        this.signalWatcher = new SignalWatcher(
-            getClaudeSignalFilePath(),
-            () => {
-                this.logger.info("Claude signal file changed.");
-            }
-        );
+        // this.signalWatcher = new SignalWatcher(
+        //     getClaudeSignalFilePath(),
+        //     () => {
+        //         this.logger.info("Claude signal file changed.");
+        //     }
+        // );
 
-        this.signalWatcher.start();
-
-        setTimeout(() => {
-
-            this.eventBus.publish({
-                source: "claude",
-                type: AgentEventType.WaitingPermission,
-                timestamp: Date.now()
-            });
-
-        }, 3000);
+        // this.signalWatcher.start();
     }
 
     public async dispose(): Promise<void> {

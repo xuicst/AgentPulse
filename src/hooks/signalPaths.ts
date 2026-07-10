@@ -8,3 +8,7 @@ export function getAgentPulseSignalDir(): string {
 export function getClaudeSignalFilePath(): string {
     return path.join(getAgentPulseSignalDir(), "claude.signal.json");
 }
+
+export function getCodexSignalFilePath(): string {
+    return path.join(getAgentPulseSignalDir(), "codex.signal.json");
+}
