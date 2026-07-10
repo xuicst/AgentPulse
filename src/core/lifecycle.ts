@@ -10,8 +10,9 @@ import { NotifierManager } from "../notifications/notifierManager";
 import { MockNotifier } from "../notifications/mockNotifier";
 import { SignalWatcher } from "../hooks/signalWatcher";
 import { getClaudeSignalFilePath } from "../hooks/signalPaths";
-// import { WindowsNotifier } from "../notifications/windowsNotifier";
+import { WindowsNotifier } from "../notifications/windowsNotifier";
 import { AgentPulseStatus } from "../ui/statusBar";
+import { registerWindowsAumid } from "../notifications/windowsAumid";
 
 export class Lifecycle {
     private readonly disposables: vscode.Disposable[] = [];
@@ -29,6 +30,8 @@ export class Lifecycle {
             return;
         }
         this.logger.info("AgentPulse initializing...");
+        await registerWindowsAumid();
+        this.logger.info("Windows AUMID registered.");
         if (this.config.isStatusBarEnabled()) {
             this.statusBar = new StatusBarManager();
             this.disposables.push(this.statusBar);
@@ -57,7 +60,9 @@ export class Lifecycle {
         );
 
         this.notifierManager.register(new MockNotifier());
-        // this.notifierManager.register(new WindowsNotifier());
+        this.notifierManager.register(
+            new WindowsNotifier(context.extensionPath)
+        );
 
         // this.eventBus.subscribe(async (event) => {
         //     this.logger.info(`[${event.source}] ${event.type}`);
