@@ -4,6 +4,7 @@
   "description": "AI Agent Notification Framework for VSCode",
   "version": "1.0.0",
   "publisher": "xuicst",
+  "icon": "resources/icon.png",
   "license": "MIT",
   "engines": {
     "vscode": "^1.98.0"
@@ -46,7 +47,6 @@
     "configuration": {
       "title": "AgentPulse",
       "properties": {
-
         "agentPulse.enabled": {
           "type": "boolean",
           "default": true,
@@ -63,6 +63,36 @@
           "type": "boolean",
           "default": true,
           "description": "Show AgentPulse status bar."
+        },
+
+        "agentPulse.notifications.desktop": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable desktop notifications."
+        },
+
+        "agentPulse.notifications.level": {
+          "type": "string",
+          "default": "important",
+          "enum": [
+            "all",
+            "important",
+            "none"
+          ],
+          "description": "Desktop notification level."
+        },
+
+        "agentPulse.notifications.permission": {
+            "type": "boolean",
+            "default": true
+        },
+        "agentPulse.notifications.completed": {
+            "type": "boolean",
+            "default": true
+        },
+        "agentPulse.notifications.failed": {
+            "type": "boolean",
+            "default": true
         },
 
         "agentPulse.detectors.codex": {

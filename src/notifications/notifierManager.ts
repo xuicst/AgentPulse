@@ -1,6 +1,6 @@
 import { AgentEvent } from "../core/events";
 import { Logger } from "../core/logger";
-import { INotificationService } from "./NotificationService";
+import { INotificationService } from "./notificationService";
 
 export class NotifierManager {
     private readonly logger = Logger.getInstance();
@@ -33,5 +33,9 @@ export class NotifierManager {
         }
 
         this.services.clear();
+    }
+
+    public count(): number {
+        return this.services.size;
     }
 }

@@ -11,15 +11,20 @@ export class CodexDetector extends BaseDetector {
     public readonly displayName = "Codex Detector";
 
     private readonly logger = Logger.getInstance();
+
     private watcher?: SignalWatcher;
     private lastSignalId?: string;
 
-    public constructor(private readonly signalPath: string) {
+    public constructor(
+        private readonly signalPath: string
+    ) {
         super();
     }
 
     public async activate(): Promise<void> {
-        this.logger.info(`Activating Codex detector: ${this.signalPath}`);
+        this.logger.info(
+            `Activating Codex detector: ${this.signalPath}`
+        );
 
         this.watcher = new SignalWatcher(
             this.signalPath,
@@ -27,36 +32,39 @@ export class CodexDetector extends BaseDetector {
         );
 
         this.watcher.start();
-
-        // 启动时读取一次已有文件
-        // await this.handleSignal();
     }
 
     public async deactivate(): Promise<void> {
         this.watcher?.stop();
         this.watcher = undefined;
 
-        this.logger.info("CodexDetector deactivated.");
+        this.logger.info(
+            "CodexDetector deactivated."
+        );
     }
 
     private async handleSignal(): Promise<void> {
         try {
-            const content = await fs.promises.readFile(
-                this.signalPath,
-                "utf8"
-            );
+            const signal = await this.readSignal();
 
-            const signal = JSON.parse(content) as SignalFileEvent;
-
-            // 防止同一个文件变更事件被重复处理
             if (signal.id === this.lastSignalId) {
                 return;
             }
 
             this.lastSignalId = signal.id;
 
-            const payload = signal.payload as CodexHookPayload;
-            const eventType = mapCodexHookToAgentEventType(payload);
+            const payload =
+                signal.payload as CodexHookPayload;
+
+            if (!payload) {
+                this.logger.warn(
+                    "Invalid Codex hook payload."
+                );
+                return;
+            }
+
+            const eventType =
+                mapCodexHookToAgentEventType(payload);
 
             if (!eventType) {
                 this.logger.debug(
@@ -64,25 +72,45 @@ export class CodexDetector extends BaseDetector {
                 );
                 return;
             }
-            
+
             this.logger.info(
                 `Codex signal received: ${signal.event}`
-            );          
+            );
             
-            this.publish(eventType, payload);
+            const event = this.createEvent(eventType, {
+                agent: "codex",
+                payload
+            });
+            
+            this.publish(event);
         } catch (error) {
             this.logger.warn(
-                `Codex signal temporarily unavailable: ${String(error)}`
+                `Failed to process Codex signal: ${String(error)}`
             );
         }
-        // } catch (error) {
-        //     this.logger.error(
-        //         `Failed to process Codex signal: ${String(error)}`
-        //     );
+    }
 
-        //     this.publish(AgentEventType.Error, {
-        //         error: String(error)
-        //     });
-        // }
+    private async readSignal(): Promise<SignalFileEvent> {
+        for (let i = 0; i < 3; i++) {
+            try {
+                const content =
+                    await fs.promises.readFile(
+                        this.signalPath,
+                        "utf8"
+                    );
+
+                return JSON.parse(
+                    content
+                ) as SignalFileEvent;
+            } catch {
+                await new Promise(resolve =>
+                    setTimeout(resolve, 20)
+                );
+            }
+        }
+
+        throw new Error(
+            "Unable to read Codex signal file."
+        );
     }
 }

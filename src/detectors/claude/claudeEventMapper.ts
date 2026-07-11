@@ -4,20 +4,24 @@ import { ClaudeHookPayload } from "./claudeHookTypes";
 export function mapClaudeHookToAgentEventType(
     payload: ClaudeHookPayload
 ): AgentEventType | undefined {
-    console.log("Claude mapper called", payload.hook_event_name);
+
     switch (payload.hook_event_name) {
+
         case "PreToolUse":
             return AgentEventType.Started;
-
-        case "PostToolUse":
-            return AgentEventType.Finished;
-
-        case "PostToolUseFailure":
-            return AgentEventType.Error;
-
-        case "PermissionDenied":
+    
+        case "PermissionRequest":
             return AgentEventType.WaitingPermission;
-
+    
+        case "Stop":
+            return AgentEventType.Finished;
+    
+        case "StopFailure":
+            return AgentEventType.Error;
+    
+        case "PermissionDenied":
+            return AgentEventType.Cancelled;
+    
         default:
             return undefined;
     }

@@ -12,7 +12,7 @@ import { MockNotifier } from "../notifications/mockNotifier";
 import { NotifierManager } from "../notifications/notifierManager";
 import { WindowsNotifier } from "../notifications/windowsNotifier";
 import { registerWindowsAumid } from "../notifications/windowsAumid";
-
+import { EventDeduplicator } from "./eventDeduplicator";
 import { StatusBarManager } from "../ui/statusBar";
 import { AgentManager } from "./agentManager";
 
@@ -25,7 +25,11 @@ export class Lifecycle {
     private readonly agentManager = new AgentManager();
     private readonly disposables: vscode.Disposable[] = [];
     private statusBar?: StatusBarManager;
-    private readonly notificationRouter = new NotificationRouter();
+    private readonly notificationRouter =
+        new NotificationRouter(this.config);
+    private context?: vscode.ExtensionContext;
+    private readonly deduplicator =
+        new EventDeduplicator();
 
     public async initialize(
         context: vscode.ExtensionContext
@@ -36,12 +40,12 @@ export class Lifecycle {
         }
 
         this.logger.info("AgentPulse initializing...");
+        this.context = context;
 
         await registerWindowsAumid();
 
         if (this.config.isStatusBarEnabled()) {
             this.statusBar = new StatusBarManager();
-            this.disposables.push(this.statusBar);
         }
 
         this.registerCommands();
@@ -51,6 +55,8 @@ export class Lifecycle {
         this.registerEventBus();
 
         this.registerDetectors();
+
+        this.registerConfigurationListener();
 
         await this.detectorManager.activateAll();
 
@@ -104,31 +110,32 @@ export class Lifecycle {
     private registerNotificationServices(
         context: vscode.ExtensionContext
     ): void {
-
+    
         this.notifierManager.register(
             new MockNotifier()
         );
-
-        this.notifierManager.register(
-            new WindowsNotifier(
-                context.extensionPath
-            )
-        );
+    
+        if (this.config.isDesktopNotificationEnabled()) {
+            this.notifierManager.register(
+                new WindowsNotifier(
+                    context.extensionPath
+                )
+            );
+        }
     }
 
     private registerEventBus(): void {
         this.eventBus.subscribe(async event => {
+            if (!this.deduplicator.shouldPublish(event)) {
+                return;
+            }
             this.agentManager.update(event);
-            const formatted =
-                EventFormatter.format(event);
             this.logger.info(
                 `[${event.source}] ${event.type}`
             );
 
             this.statusBar?.updateByEvent(event);
-            if (
-                this.notificationRouter.shouldNotify(event)
-            ) {
+            if (this.notificationRouter.shouldNotify(event)) {
                 await this.notifierManager.notifyAll(event);
             }
         });
@@ -140,17 +147,83 @@ export class Lifecycle {
         }
     }
 
+    private registerConfigurationListener(): void {
+        const disposable =
+            vscode.workspace.onDidChangeConfiguration(async event => {
+    
+                if (!event.affectsConfiguration("agentPulse")) {
+                    return;
+                }
+    
+                this.logger.info(
+                    "AgentPulse configuration changed."
+                );
+    
+                await this.reloadDetectors();
+
+                if (this.context) {
+                    this.reloadNotifiers(this.context);
+                }
+
+                this.reloadStatusBar();
+            });
+    
+        this.disposables.push(disposable);
+    }
+
+    private async reloadDetectors(): Promise<void> {
+        this.logger.info(
+            "Reloading detectors..."
+        );
+    
+        await this.detectorManager.deactivateAll();
+    
+        this.detectorManager.clear();
+    
+        this.registerDetectors();
+    
+        await this.detectorManager.activateAll();
+    
+        this.logger.info(
+            `Detectors reloaded (${this.detectorManager.count()}).`
+        );
+    }
+
+    private reloadNotifiers(
+        context: vscode.ExtensionContext
+    ): void {
+    
+        this.notifierManager.dispose();
+    
+        this.registerNotificationServices(context);
+    
+        this.logger.info(
+            `Notification services reloaded (${this.notifierManager.count()}).`
+        );
+    }
+
+    private reloadStatusBar(): void {
+        this.statusBar?.dispose();
+        this.statusBar = undefined;
+    
+        if (this.config.isStatusBarEnabled()) {
+            this.statusBar = new StatusBarManager();
+        }
+    
+        this.logger.info("Status bar reloaded.");
+    }
+
     public async dispose(): Promise<void> {
         this.logger.info("AgentPulse disposing...");
-
         await this.detectorManager.deactivateAll();
 
         this.notifierManager.dispose();
-
+        this.statusBar?.dispose();
+    
         for (const disposable of this.disposables) {
             disposable.dispose();
         }
-
+    
         this.agentManager.clear();
         this.eventBus.dispose();
         this.logger.dispose();

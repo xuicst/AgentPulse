@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import { Logger } from "../../core/logger";
-import { AgentEventType } from "../../core/events";
 import { SignalWatcher } from "../../hooks/signalWatcher";
 import { SignalFileEvent } from "../../hooks/signalTypes";
 import { BaseDetector } from "../base/baseDetector";
@@ -46,13 +45,7 @@ export class ClaudeDetector extends BaseDetector {
 
     private async handleSignal(): Promise<void> {
         try {
-            const content = await fs.promises.readFile(
-                this.signalPath,
-                "utf8"
-            );
-
-            const signal =
-                JSON.parse(content) as SignalFileEvent;
+            const signal = await this.readSignal();
 
             if (signal.id === this.lastSignalId) {
                 return;
@@ -62,6 +55,13 @@ export class ClaudeDetector extends BaseDetector {
 
             const payload =
                 signal.payload as ClaudeHookPayload;
+
+            if (!payload?.hook_event_name) {
+                this.logger.warn(
+                    "Invalid Claude hook payload."
+                );
+                return;
+            }
 
             const eventType =
                 mapClaudeHookToAgentEventType(payload);
@@ -87,10 +87,32 @@ export class ClaudeDetector extends BaseDetector {
             this.publish(event);
         } catch (error) {
             this.logger.warn(
-                `Claude signal temporarily unavailable: ${String(
-                    error
-                )}`
+                `Failed to process Claude signal: ${String(error)}`
             );
         }
+    }
+
+    private async readSignal(): Promise<SignalFileEvent> {
+        for (let i = 0; i < 3; i++) {
+            try {
+                const content =
+                    await fs.promises.readFile(
+                        this.signalPath,
+                        "utf8"
+                    );
+
+                return JSON.parse(
+                    content
+                ) as SignalFileEvent;
+            } catch {
+                await new Promise(resolve =>
+                    setTimeout(resolve, 20)
+                );
+            }
+        }
+
+        throw new Error(
+            "Unable to read Claude signal file."
+        );
     }
 }

@@ -15,9 +15,9 @@ export class DetectorManager {
             );
         }
         this.detectors.set(detector.id, detector);
-        this.logger.info(
-            `Detector registered: ${detector.displayName}`
-        );
+        // this.logger.info(
+        //     `Detector registered: ${detector.displayName}`
+        // );
     }
 
     /**
@@ -70,5 +70,9 @@ export class DetectorManager {
      */
     public count(): number {
         return this.detectors.size;
+    }
+
+    public clear(): void {
+        this.detectors.clear();
     }
 }
