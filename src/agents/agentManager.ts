@@ -50,6 +50,10 @@ export class AgentManager {
                 session.state = AgentState.WaitingPermission;
                 break;
 
+            case AgentEventType.WaitingInput:
+                session.state = AgentState.WaitingInput;
+                break;
+
             case AgentEventType.Finished:
                 session.state = AgentState.Finished;
                 session.finishedAt = event.timestamp;
@@ -73,7 +77,7 @@ export class AgentManager {
         return this.sessions.get(agent);
     }
 
-    public getAll(): readonly AgentSession[] {
+    public current(): readonly AgentSession[] {
         return [...this.sessions.values()];
     }
 

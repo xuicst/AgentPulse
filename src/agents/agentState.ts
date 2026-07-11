@@ -5,6 +5,8 @@ export enum AgentState {
 
     WaitingPermission = "waitingPermission",
 
+    WaitingInput = "waitingInput",
+
     Finished = "finished",
 
     Error = "error",

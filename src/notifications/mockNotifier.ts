@@ -1,6 +1,6 @@
 import { AgentEvent } from "../core/events";
 import { Logger } from "../core/logger";
-import { INotificationService } from "./NotificationService";
+import { INotificationService } from "./notificationService";
 
 export class MockNotifier implements INotificationService {
     public readonly id = "mock";

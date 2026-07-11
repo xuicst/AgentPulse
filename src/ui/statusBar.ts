@@ -5,6 +5,7 @@ export enum AgentPulseStatus {
     Idle = "idle",
     Running = "running",
     WaitingPermission = "waitingPermission",
+    WaitingInput = "waitingInput",
     Error = "error"
 }
 
@@ -32,6 +33,10 @@ export class StatusBarManager {
                 this.item.text = "$(warning) AgentPulse";
                 this.item.tooltip = "AgentPulse is waiting for permission";
                 break;
+            case AgentPulseStatus.WaitingInput:
+                this.item.text = "$(edit) AgentPulse";
+                this.item.tooltip = "AgentPulse is waiting for input";
+                break;
             case AgentPulseStatus.Error:
                 this.item.text = "$(error) AgentPulse";
                 this.item.tooltip = "AgentPulse error";
@@ -50,6 +55,10 @@ export class StatusBarManager {
                 this.setStatus(AgentPulseStatus.WaitingPermission);
                 break;
 
+            case AgentEventType.WaitingInput:
+                this.setStatus(AgentPulseStatus.WaitingInput);
+                break;
+            
             case AgentEventType.Finished:
                 this.setStatus(AgentPulseStatus.Idle);
                 break;

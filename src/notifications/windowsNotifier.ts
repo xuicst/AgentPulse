@@ -1,6 +1,6 @@
 import * as path from "path";
 import { execFile } from "child_process";
-import * as vscode from "vscode";
+import { EventFormatter } from "../core/eventFormatter";
 import { AgentEvent, AgentEventType } from "../core/events";
 import { Logger } from "../core/logger";
 import { INotificationService } from "./NotificationService";
@@ -23,8 +23,10 @@ export class WindowsNotifier implements INotificationService {
             "AgentPulse.ToastBridge.exe"
         );
 
-        const title = `AgentPulse · ${event.source}`;
-        const message = this.getMessage(event);
+        const formatted =
+            EventFormatter.format(event);
+        const title = formatted.title;
+        const message = formatted.message;
 
         await new Promise<void>((resolve, reject) => {
             execFile(executable, [title, message], (error, stdout, stderr) => {
@@ -42,22 +44,5 @@ export class WindowsNotifier implements INotificationService {
                 resolve();
             });
         });
-    }
-
-    private getMessage(event: AgentEvent): string {
-        switch (event.type) {
-            case AgentEventType.WaitingPermission:
-                return "需要你的授权。";
-            case AgentEventType.WaitingInput:
-                return "等待你的输入。";
-            case AgentEventType.Finished:
-                return "任务已完成。";
-            case AgentEventType.Error:
-                return "任务执行失败。";
-            case AgentEventType.Started:
-                return "任务已开始。";
-            default:
-                return `事件：${event.type}`;
-        }
     }
 }

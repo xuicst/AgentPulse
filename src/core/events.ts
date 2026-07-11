@@ -3,6 +3,7 @@ export enum AgentEventType {
     ToolStarted = "toolStarted",
     ToolFinished = "toolFinished",
     WaitingPermission = "waitingPermission",
+    WaitingInput = "waitingInput",
     Finished = "finished",
     Error = "error",
     Cancelled = "cancelled"

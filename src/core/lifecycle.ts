@@ -4,37 +4,32 @@ import { ConfigManager } from "./config";
 import { EventBus } from "./eventBus";
 import { AgentEventType } from "./events";
 import { Logger } from "./logger";
-
+import { NotificationRouter } from "./notificationRouter";
 import { DetectorFactory } from "../detectors/detectorFactory";
 import { DetectorManager } from "../detectors/detectorManager";
-
+import { EventFormatter } from "./eventFormatter";
 import { MockNotifier } from "../notifications/mockNotifier";
 import { NotifierManager } from "../notifications/notifierManager";
 import { WindowsNotifier } from "../notifications/windowsNotifier";
 import { registerWindowsAumid } from "../notifications/windowsAumid";
 
 import { StatusBarManager } from "../ui/statusBar";
+import { AgentManager } from "./agentManager";
 
 export class Lifecycle {
-
     private readonly logger = Logger.getInstance();
-
     private readonly config = new ConfigManager();
-
     private readonly eventBus = EventBus.getInstance();
-
     private readonly detectorManager = new DetectorManager();
-
     private readonly notifierManager = new NotifierManager();
-
+    private readonly agentManager = new AgentManager();
     private readonly disposables: vscode.Disposable[] = [];
-
     private statusBar?: StatusBarManager;
+    private readonly notificationRouter = new NotificationRouter();
 
     public async initialize(
         context: vscode.ExtensionContext
     ): Promise<void> {
-
         if (!this.config.isEnabled()) {
             this.logger.info("AgentPulse disabled.");
             return;
@@ -71,9 +66,7 @@ export class Lifecycle {
     }
 
     private registerCommands(): void {
-
         this.disposables.push(
-
             vscode.commands.registerCommand(
                 "agentPulse.showOutput",
                 () => this.logger.show()
@@ -96,7 +89,6 @@ export class Lifecycle {
             vscode.commands.registerCommand(
                 "agentPulse.testNotification",
                 () => {
-
                     this.logger.info("Test notification requested.");
 
                     this.eventBus.publish({
@@ -104,12 +96,9 @@ export class Lifecycle {
                         type: AgentEventType.WaitingPermission,
                         timestamp: Date.now()
                     });
-
                 }
             )
-
         );
-
     }
 
     private registerNotificationServices(
@@ -125,37 +114,33 @@ export class Lifecycle {
                 context.extensionPath
             )
         );
-
     }
 
     private registerEventBus(): void {
-
         this.eventBus.subscribe(async event => {
-
+            this.agentManager.update(event);
+            const formatted =
+                EventFormatter.format(event);
             this.logger.info(
                 `[${event.source}] ${event.type}`
             );
 
             this.statusBar?.updateByEvent(event);
-
-            await this.notifierManager.notifyAll(event);
-
+            if (
+                this.notificationRouter.shouldNotify(event)
+            ) {
+                await this.notifierManager.notifyAll(event);
+            }
         });
-
     }
 
     private registerDetectors(): void {
-
         for (const detector of DetectorFactory.create(this.config)) {
-
             this.detectorManager.register(detector);
-
         }
-
     }
 
     public async dispose(): Promise<void> {
-
         this.logger.info("AgentPulse disposing...");
 
         await this.detectorManager.deactivateAll();
@@ -166,10 +151,8 @@ export class Lifecycle {
             disposable.dispose();
         }
 
+        this.agentManager.clear();
         this.eventBus.dispose();
-
         this.logger.dispose();
-
     }
-
 }
