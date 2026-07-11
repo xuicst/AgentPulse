@@ -2,7 +2,7 @@
   "name": "AgentPulse",
   "displayName": "AgentPulse",
   "description": "AI Agent Notification Framework for VSCode",
-  "version": "1.0",
+  "version": "1.0.0",
   "publisher": "xuicst",
   "icon": "resources/icon.png",
   "license": "MIT",

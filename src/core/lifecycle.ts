@@ -81,7 +81,7 @@ export class Lifecycle {
             vscode.commands.registerCommand(
                 "agentPulse.about",
                 () => vscode.window.showInformationMessage(
-                    "AgentPulse v1.0"
+                    "AgentPulse v1.0.0"
                 )
             ),
 
