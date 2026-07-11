@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as path from "path";
 import { Logger } from "../core/logger";
 
 export class SignalWatcher {
@@ -24,8 +25,13 @@ public start(): void {
 
     this.logger.info(`Watching signal: ${this.filePath}`);
 
-    this.watcher = fs.watch(this.filePath, () => {
-        this.onChanged();
+    const dir = path.dirname(this.filePath);
+    const filename = path.basename(this.filePath);
+
+    this.watcher = fs.watch(dir, (eventType, changedFile) => {
+        if (changedFile === filename) {
+            this.onChanged();
+        }
     });
 }
 

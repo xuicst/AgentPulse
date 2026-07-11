@@ -1,36 +1,21 @@
-import { AgentEvent, AgentEventType } from "../../core/events";
-import {
-    CodexHookEventName,
-    CodexHookPayload
-} from "./codexHookTypes";
+import { AgentEventType } from "../../core/events";
+import { CodexHookPayload } from "./codexHookTypes";
 
-export function mapCodexHookToAgentEvent(
+export function mapCodexHookToAgentEventType(
     payload: CodexHookPayload
-): AgentEvent {
-    let type: AgentEventType;
+): AgentEventType | undefined {
 
     switch (payload.hook_event_name) {
-        case CodexHookEventName.SessionStart:
-            type = AgentEventType.Started;
-            break;
+        case "SessionStart":
+            return AgentEventType.Started;
 
-        case CodexHookEventName.PermissionRequest:
-            type = AgentEventType.WaitingPermission;
-            break;
+        case "PermissionRequest":
+            return AgentEventType.WaitingPermission;
 
-        case CodexHookEventName.Stop:
-            type = AgentEventType.Finished;
-            break;
+        case "Stop":
+            return AgentEventType.Finished;
 
         default:
-            type = AgentEventType.WaitingInput;
-            break;
+            return undefined;
     }
-
-    return {
-        source: "codex",
-        type,
-        timestamp: Date.now(),
-        payload
-    };
 }

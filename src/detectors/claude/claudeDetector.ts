@@ -3,27 +3,30 @@ import { Logger } from "../../core/logger";
 import { SignalWatcher } from "../../hooks/signalWatcher";
 import { SignalFileEvent } from "../../hooks/signalTypes";
 import { BaseDetector } from "../base/baseDetector";
-import { mapCodexHookToAgentEventType } from "./codexEventMapper";
-import { CodexHookPayload } from "./codexHookTypes";
+import { mapClaudeHookToAgentEventType } from "./claudeEventMapper";
+import { ClaudeHookPayload } from "./claudeHookTypes";
 
-export class CodexDetector extends BaseDetector {
-    public readonly id = "codex";
-    public readonly displayName = "Codex Detector";
+export class ClaudeDetector extends BaseDetector {
+    public readonly id = "claude";
+    public readonly displayName = "Claude Detector";
 
     private readonly logger = Logger.getInstance();
     private watcher?: SignalWatcher;
     private lastSignalId?: string;
+    private lastChecksum?: string;
 
     public constructor(private readonly signalPath: string) {
         super();
     }
 
     public async activate(): Promise<void> {
-        this.logger.info(`Activating Codex detector: ${this.signalPath}`);
+        this.logger.info(`Activating Claude detector: ${this.signalPath}`);
 
         this.watcher = new SignalWatcher(
             this.signalPath,
-            () => void this.handleSignal()
+            () => {
+                void this.handleSignal();
+            }
         );
 
         this.watcher.start();
@@ -36,7 +39,7 @@ export class CodexDetector extends BaseDetector {
         this.watcher?.stop();
         this.watcher = undefined;
 
-        this.logger.info("CodexDetector deactivated.");
+        this.logger.info("ClaudeDetector deactivated.");
     }
 
     private async handleSignal(): Promise<void> {
@@ -47,6 +50,13 @@ export class CodexDetector extends BaseDetector {
             );
 
             const signal = JSON.parse(content) as SignalFileEvent;
+            const checksum = JSON.stringify(signal);
+
+            if (checksum === this.lastChecksum) {
+                return;
+            }
+
+            this.lastChecksum = checksum;
 
             // 防止同一个文件变更事件被重复处理
             if (signal.id === this.lastSignalId) {
@@ -55,34 +65,30 @@ export class CodexDetector extends BaseDetector {
 
             this.lastSignalId = signal.id;
 
-            const payload = signal.payload as CodexHookPayload;
-            const eventType = mapCodexHookToAgentEventType(payload);
+            const payload = signal.payload as ClaudeHookPayload;
+
+            const eventType = mapClaudeHookToAgentEventType(payload);
+
+            this.logger.info(
+                `hook_event_name = ${payload.hook_event_name}`
+            );
 
             if (!eventType) {
-                this.logger.debug(
-                    `Ignored Codex hook: ${signal.event}`
+                this.logger.info(
+                    `Ignored Claude hook: ${payload.hook_event_name}`
                 );
                 return;
             }
             
             this.logger.info(
-                `Codex signal received: ${signal.event}`
-            );          
+                `Claude hook received: ${payload.hook_event_name}`
+            );      
             
             this.publish(eventType, payload);
         } catch (error) {
             this.logger.warn(
-                `Codex signal temporarily unavailable: ${String(error)}`
+                `Claude signal temporarily unavailable: ${String(error)}`
             );
         }
-        // } catch (error) {
-        //     this.logger.error(
-        //         `Failed to process Codex signal: ${String(error)}`
-        //     );
-
-        //     this.publish(AgentEventType.Error, {
-        //         error: String(error)
-        //     });
-        // }
     }
 }

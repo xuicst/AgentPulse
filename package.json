@@ -2,11 +2,11 @@
   "name": "AgentPulse",
   "displayName": "AgentPulse",
   "description": "AI Agent Notification Framework for VSCode",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "publisher": "xuicst",
   "license": "MIT",
   "engines": {
-    "vscode": "^1.102.0"
+    "vscode": "^1.98.0"
   },
   "categories": [
     "Other"
@@ -41,7 +41,44 @@
         "command": "agentPulse.testNotification",
         "title": "AgentPulse: Test Notification"
       }
-    ]
+    ],
+    
+    "configuration": {
+      "title": "AgentPulse",
+      "properties": {
+
+        "agentPulse.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable AgentPulse."
+        },
+
+        "agentPulse.debug": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable debug logging."
+        },
+
+        "agentPulse.statusBar.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show AgentPulse status bar."
+        },
+
+        "agentPulse.detectors.codex": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Codex detector."
+        },
+
+        "agentPulse.detectors.claude": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Claude detector."
+        }
+
+      }
+    }
   },
   "scripts": {
     "compile": "node esbuild.js",

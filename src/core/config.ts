@@ -15,6 +15,20 @@ export class ConfigManager {
         return this.get<boolean>("statusBar.enabled", true);
     }
 
+    public isCodexEnabled(): boolean {
+        return this.get<boolean>(
+            "detectors.codex",
+            true
+        );
+    }
+    
+    public isClaudeEnabled(): boolean {
+        return this.get<boolean>(
+            "detectors.claude",
+            true
+        );
+    }
+
     public get<T>(key: string, defaultValue: T): T {
         return vscode.workspace
             .getConfiguration(ConfigManager.SECTION)

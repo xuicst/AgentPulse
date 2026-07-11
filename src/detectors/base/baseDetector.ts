@@ -9,19 +9,30 @@ export abstract class BaseDetector implements IDetector {
     protected readonly eventBus = EventBus.getInstance();
 
     public abstract activate(): Promise<void>;
+
     public abstract deactivate(): Promise<void>;
 
-    protected publish(
+    protected publish(event: AgentEvent): void {
+        this.eventBus.publish(event);
+    }
+
+    protected createEvent(
         type: AgentEventType,
-        payload?: unknown
-    ): void {
-        const event: AgentEvent = {
+        payload: {
+            agent?: string;
+            sessionId?: string;
+            toolName?: string;
+            payload?: unknown;
+        } = {}
+    ): AgentEvent {
+        return {
             source: this.id,
+            agent: payload.agent ?? this.id,
             type,
             timestamp: Date.now(),
-            payload
+            sessionId: payload.sessionId,
+            toolName: payload.toolName,
+            payload: payload.payload
         };
-
-        this.eventBus.publish(event);
     }
 }
