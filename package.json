@@ -6,6 +6,10 @@
   "publisher": "xuicst",
   "icon": "resources/icon.png",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xuicst/AgentPulse"
+  },
   "engines": {
     "vscode": "^1.98.0"
   },
