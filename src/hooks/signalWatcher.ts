@@ -18,30 +18,31 @@ export class SignalWatcher {
             return;
         }
 
-        if (!fs.existsSync(this.filePath)) {
-            this.logger.debug(
-                `Signal file not found: ${this.filePath}`
-            );
-            return;
-        }
-
-        this.logger.info(
-            `Watching signal: ${this.filePath}`
-        );
-
         const dir = path.dirname(this.filePath);
         const filename = path.basename(this.filePath);
 
-        this.watcher = fs.watch(
-            dir,
-            (_eventType, changedFile) => {
-                if (changedFile !== filename) {
-                    return;
-                }
+        try {
+            fs.mkdirSync(dir, { recursive: true });
 
-                this.scheduleCallback();
-            }
-        );
+            this.watcher = fs.watch(
+                dir,
+                (_eventType, changedFile) => {
+                    if (changedFile?.toString() !== filename) {
+                        return;
+                    }
+
+                    this.scheduleCallback();
+                }
+            );
+
+            this.logger.info(
+                `Watching signal directory: ${dir}`
+            );
+        } catch (error) {
+            this.logger.error(
+                `Failed to watch signal directory ${dir}: ${String(error)}`
+            );
+        }
     }
 
     private scheduleCallback(): void {

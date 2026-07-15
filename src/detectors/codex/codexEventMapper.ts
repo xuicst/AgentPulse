@@ -1,18 +1,22 @@
 import { AgentEventType } from "../../core/events";
-import { CodexHookPayload } from "./codexHookTypes";
+import {
+    CodexHookEventName,
+    CodexHookPayload
+} from "./codexHookTypes";
 
 export function mapCodexHookToAgentEventType(
     payload: CodexHookPayload
 ): AgentEventType | undefined {
 
     switch (payload.hook_event_name) {
-        case "SessionStart":
+
+        case CodexHookEventName.SessionStart:
             return AgentEventType.Started;
 
-        case "PermissionRequest":
+        case CodexHookEventName.PermissionRequest:
             return AgentEventType.WaitingPermission;
 
-        case "Stop":
+        case CodexHookEventName.Stop:
             return AgentEventType.Finished;
 
         default:

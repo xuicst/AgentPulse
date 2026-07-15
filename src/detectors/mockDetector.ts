@@ -11,7 +11,9 @@ export class MockDetector extends BaseDetector {
     public async activate(): Promise<void> {
         this.logger.info("MockDetector activated.");
 
-        this.publish(AgentEventType.Started);
+        this.publish(
+            this.createEvent(AgentEventType.Started)
+        );
     }
 
     public async deactivate(): Promise<void> {

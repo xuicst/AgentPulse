@@ -59,7 +59,7 @@ export class ConfigManager {
     
     public isErrorNotificationEnabled(): boolean {
         return this.get(
-            "notifications.error",
+            "notifications.failed",
             true
         );
     }

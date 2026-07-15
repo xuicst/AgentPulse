@@ -53,18 +53,22 @@ export class CodexDetector extends BaseDetector {
 
             this.lastSignalId = signal.id;
 
-            const payload =
-                signal.payload as CodexHookPayload;
+            const payload = signal.payload;
 
-            if (!payload) {
+            if (
+                !payload ||
+                typeof payload !== "object"
+            ) {
                 this.logger.warn(
                     "Invalid Codex hook payload."
                 );
                 return;
             }
 
+            const hookPayload = payload as CodexHookPayload;
+
             const eventType =
-                mapCodexHookToAgentEventType(payload);
+                mapCodexHookToAgentEventType(hookPayload);
 
             if (!eventType) {
                 this.logger.debug(
@@ -74,11 +78,11 @@ export class CodexDetector extends BaseDetector {
             }
 
             this.logger.info(
-                `Codex signal received: ${signal.event}`
+                `Codex ${hookPayload.hook_event_name}`
             );
             
             const event = this.createEvent(eventType, {
-                agent: "codex",
+                agent: this.id,
                 payload
             });
             

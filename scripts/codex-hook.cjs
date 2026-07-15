@@ -9,6 +9,16 @@ const logPath = path.join(baseDir, "codex-hook.log");
 
 fs.mkdirSync(signalDir, { recursive: true });
 
+function logError(error) {
+    fs.appendFileSync(
+        logPath,
+        `[${new Date().toISOString()}] ERROR: ${
+            error instanceof Error ? error.stack : String(error)
+        }\n`,
+        "utf8"
+    );
+}
+
 let input = "";
 process.stdin.setEncoding("utf8");
 
@@ -18,12 +28,6 @@ process.stdin.on("data", chunk => {
 
 process.stdin.on("end", () => {
     try {
-        fs.appendFileSync(
-            logPath,
-            `[${new Date().toISOString()}] stdin: ${input}\n`,
-            "utf8"
-        );
-
         const payload = input.trim() ? JSON.parse(input) : {};
 
         const eventName =
@@ -50,13 +54,7 @@ process.stdin.on("end", () => {
 
         fs.renameSync(temporaryPath, signalPath);
     } catch (error) {
-        fs.appendFileSync(
-            logPath,
-            `[${new Date().toISOString()}] ERROR: ${
-                error instanceof Error ? error.stack : String(error)
-            }\n`,
-            "utf8"
-        );
+        logError(error);
     }
 
     // 通知 Hook 出错也不要影响 Codex 会话
@@ -64,6 +62,6 @@ process.stdin.on("end", () => {
 });
 
 process.stdin.on("error", error => {
-    fs.appendFileSync(logPath, `STDIN ERROR: ${String(error)}\n`, "utf8");
+    logError(error);
     process.exit(0);
 });

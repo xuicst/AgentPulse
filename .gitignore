@@ -2,3 +2,19 @@ node_modules
 dist
 .vscode-test
 *.vsix
+
+# Editor and operating-system files
+.vscode/
+.vs/
+.DS_Store
+Thumbs.db
+*.user
+*.suo
+
+# Generated native build output
+tools/**/bin/
+tools/**/obj/
+tools/**/target/
+
+# Superseded local-only Windows bridge payload
+resources/win32-x64/toast-bridge/

@@ -10,11 +10,14 @@ import { DetectorManager } from "../detectors/detectorManager";
 import { EventFormatter } from "./eventFormatter";
 import { MockNotifier } from "../notifications/mockNotifier";
 import { NotifierManager } from "../notifications/notifierManager";
-import { WindowsNotifier } from "../notifications/windowsNotifier";
-import { registerWindowsAumid } from "../notifications/windowsAumid";
+import { createPlatformNotifier } from "../notifications/platformNotifierFactory";
+import { FallbackNotifier } from "../notifications/fallbackNotifier";
+import { VsCodeNotifier } from "../notifications/vscodeNotifier";
 import { EventDeduplicator } from "./eventDeduplicator";
 import { StatusBarManager } from "../ui/statusBar";
 import { AgentManager } from "./agentManager";
+import { CodexHookInstaller } from "../hooks/codexHookInstaller";
+import { ClaudeHookInstaller } from "../hooks/claudeHookInstaller";
 
 export class Lifecycle {
     private readonly logger = Logger.getInstance();
@@ -42,8 +45,6 @@ export class Lifecycle {
         this.logger.info("AgentPulse initializing...");
         this.context = context;
 
-        await registerWindowsAumid();
-
         if (this.config.isStatusBarEnabled()) {
             this.statusBar = new StatusBarManager();
         }
@@ -59,6 +60,8 @@ export class Lifecycle {
         this.registerConfigurationListener();
 
         await this.detectorManager.activateAll();
+
+        void this.promptForHookInstallations();
 
         context.subscriptions.push(...this.disposables);
 
@@ -87,9 +90,18 @@ export class Lifecycle {
 
             vscode.commands.registerCommand(
                 "agentPulse.restart",
-                () => vscode.window.showInformationMessage(
-                    "Restart is not implemented yet."
-                )
+                async () => {
+                    await this.reloadDetectors();
+
+                    if (this.context) {
+                        this.reloadNotifiers(this.context);
+                    }
+
+                    this.reloadStatusBar();
+                    void vscode.window.showInformationMessage(
+                        "AgentPulse restarted."
+                    );
+                }
             ),
 
             vscode.commands.registerCommand(
@@ -103,6 +115,16 @@ export class Lifecycle {
                         timestamp: Date.now()
                     });
                 }
+            ),
+
+            vscode.commands.registerCommand(
+                "agentPulse.installCodexHook",
+                () => this.installCodexHook()
+            ),
+
+            vscode.commands.registerCommand(
+                "agentPulse.installClaudeHook",
+                () => this.installClaudeHook()
             )
         );
     }
@@ -115,11 +137,27 @@ export class Lifecycle {
             new MockNotifier()
         );
     
-        if (this.config.isDesktopNotificationEnabled()) {
+        if (!this.config.isDesktopNotificationEnabled()) {
+            return;
+        }
+
+        const notifier = createPlatformNotifier(
+            context.extensionPath
+        );
+
+        if (notifier) {
             this.notifierManager.register(
-                new WindowsNotifier(
-                    context.extensionPath
+                new FallbackNotifier(
+                    notifier,
+                    new VsCodeNotifier()
                 )
+            );
+        } else {
+            this.logger.warn(
+                `Desktop notifications are not supported on ${process.platform}.`
+            );
+            this.notifierManager.register(
+                new VsCodeNotifier()
             );
         }
     }
@@ -158,6 +196,15 @@ export class Lifecycle {
                 this.logger.info(
                     "AgentPulse configuration changed."
                 );
+
+                if (!this.config.isEnabled()) {
+                    await this.detectorManager.deactivateAll();
+                    this.notifierManager.dispose();
+                    this.statusBar?.dispose();
+                    this.statusBar = undefined;
+                    this.logger.info("AgentPulse disabled.");
+                    return;
+                }
     
                 await this.reloadDetectors();
 
@@ -169,6 +216,121 @@ export class Lifecycle {
             });
     
         this.disposables.push(disposable);
+    }
+
+    private async promptForHookInstallations(): Promise<void> {
+        await this.promptForCodexHookInstallation();
+        await this.promptForClaudeHookInstallation();
+    }
+
+    private async promptForCodexHookInstallation(): Promise<void> {
+        if (!this.config.isCodexEnabled() || !this.isDesktopPlatform()) {
+            return;
+        }
+
+        if (!this.context) {
+            return;
+        }
+
+        const installer = new CodexHookInstaller(
+            this.context.extensionPath
+        );
+
+        if (await installer.isInstalled()) {
+            return;
+        }
+
+        const action = await vscode.window.showInformationMessage(
+            "Enable Codex notifications by installing AgentPulse hooks?",
+            "Enable Codex notifications",
+            "Not now"
+        );
+
+        if (action === "Enable Codex notifications") {
+            await this.installCodexHook();
+        }
+    }
+
+    private async promptForClaudeHookInstallation(): Promise<void> {
+        if (!this.config.isClaudeEnabled() || !this.isDesktopPlatform()) {
+            return;
+        }
+
+        if (!this.context) {
+            return;
+        }
+
+        const installer = new ClaudeHookInstaller(
+            this.context.extensionPath
+        );
+
+        if (await installer.isInstalled()) {
+            return;
+        }
+
+        const action = await vscode.window.showInformationMessage(
+            "Enable Claude notifications by installing AgentPulse hooks?",
+            "Enable Claude notifications",
+            "Not now"
+        );
+
+        if (action === "Enable Claude notifications") {
+            await this.installClaudeHook();
+        }
+    }
+
+    private async installCodexHook(): Promise<void> {
+        if (!this.context) {
+            return;
+        }
+
+        try {
+            const installer = new CodexHookInstaller(
+                this.context.extensionPath
+            );
+            await installer.install();
+
+            void vscode.window.showInformationMessage(
+                "AgentPulse installed Codex hooks. Restart Codex to approve and load them."
+            );
+        } catch (error) {
+            this.logger.error(
+                `Failed to install Codex hooks: ${String(error)}`
+            );
+            void vscode.window.showErrorMessage(
+                "AgentPulse could not install Codex hooks. See the AgentPulse output for details."
+            );
+        }
+    }
+
+    private async installClaudeHook(): Promise<void> {
+        if (!this.context) {
+            return;
+        }
+
+        try {
+            const installer = new ClaudeHookInstaller(
+                this.context.extensionPath
+            );
+            await installer.install();
+
+            void vscode.window.showInformationMessage(
+                "AgentPulse installed Claude hooks. Claude will detect them automatically."
+            );
+        } catch (error) {
+            this.logger.error(
+                `Failed to install Claude hooks: ${String(error)}`
+            );
+            void vscode.window.showErrorMessage(
+                "AgentPulse could not install Claude hooks. See the AgentPulse output for details."
+            );
+        }
+    }
+
+    private isDesktopPlatform(): boolean {
+        return ["win32", "darwin", "linux"].includes(
+            process.platform
+        );
     }
 
     private async reloadDetectors(): Promise<void> {

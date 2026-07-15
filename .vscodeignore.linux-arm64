@@ -8,7 +8,10 @@ node_modules/**
 tsconfig.json
 esbuild.js
 .gitignore
+.vscodeignore
 .vscodeignore.*
+scripts/build-native-helper.cjs
+scripts/verify-native-helper.cjs
 
 **/*.map
 **/*.ts
@@ -16,4 +19,6 @@ esbuild.js
 **/obj/**
 **/bin/**
 
-resources/*/toast-bridge/*.pdb
+resources/win32-*/**
+resources/darwin-*/**
+resources/linux-x64/**

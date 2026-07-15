@@ -1,0 +1,79 @@
+name: Package platform VSIX files
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: win32-x64
+            ignore_file: .vscodeignore.win32-x64
+            native_helper: true
+          - os: macos-15-intel
+            target: darwin-x64
+            ignore_file: .vscodeignore.darwin-x64
+            native_helper: false
+          - os: macos-15
+            target: darwin-arm64
+            ignore_file: .vscodeignore.darwin-arm64
+            native_helper: false
+          - os: ubuntu-latest
+            target: linux-x64
+            ignore_file: .vscodeignore.linux-x64
+            native_helper: true
+          - os: ubuntu-24.04-arm
+            target: linux-arm64
+            ignore_file: .vscodeignore.linux-arm64
+            native_helper: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: matrix.native_helper
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run check
+
+      - name: Compile extension
+        run: npm run compile
+
+      - name: Build native notification helper
+        if: matrix.native_helper
+        run: npm run package:native
+
+      - name: Verify native Helper architecture
+        if: matrix.native_helper
+        run: node scripts/verify-native-helper.cjs ${{ matrix.target }}
+
+      - name: Create VSIX
+        run: npx vsce package --target ${{ matrix.target }} --ignoreFile ${{ matrix.ignore_file }} --out AgentPulse-${{ matrix.target }}.vsix
+
+      - name: Upload VSIX
+        uses: actions/upload-artifact@v4
+        with:
+          name: AgentPulse-${{ matrix.target }}
+          path: AgentPulse-${{ matrix.target }}.vsix
+          if-no-files-found: error

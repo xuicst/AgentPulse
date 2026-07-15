@@ -1,0 +1,19 @@
+[package]
+name = "agentpulse-notify"
+version = "1.0.0"
+edition = "2024"
+license = "MIT"
+description = "Native desktop notification helper for AgentPulse"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "z"
+panic = "abort"
+strip = true
+
+[target.'cfg(windows)'.dependencies]
+winrt-toast = "=0.1.1"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+zbus = { version = "=5.17.0", default-features = false, features = ["async-io", "blocking-api"] }
