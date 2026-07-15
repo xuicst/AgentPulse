@@ -1,5 +1,7 @@
 src/**
 tools/**
+config/**
+docs/**
 node_modules/**
 
 .git/**
@@ -20,5 +22,5 @@ scripts/verify-native-helper.cjs
 **/bin/**
 
 resources/win32-*/**
-resources/darwin-*/**
-resources/linux-arm64/**
+resources/linux-*/**
+resources/darwin-x64/**

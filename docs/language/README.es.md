@@ -2,7 +2,7 @@
 
 > Extensión de VS Code que envía notificaciones locales de escritorio cuando Claude Code o Codex necesita permiso, termina, falla o se cancela.
 
-[English](README.md) | [简体中文](README.zh-CN.md) | [Français](README.fr.md) | [Русский](README.ru.md) | [Español](README.es.md)
+[English](../../README.md) | [简体中文](README.zh-CN.md) | [Français](README.fr.md) | [Русский](README.ru.md) | [Español](README.es.md)
 
 AgentPulse te ayuda a conocer el estado de tu agente de IA mientras trabajas en otra cosa. Los eventos Hook se procesan localmente y su contenido nunca se envía por la red.
 
@@ -139,4 +139,4 @@ Se agradecen issues, pasos de reproducción y pull requests. Para cambios relaci
 
 ## Licencia
 
-Este proyecto se distribuye bajo la [licencia MIT](LICENSE).
+Este proyecto se distribuye bajo la [licencia MIT](../../LICENSE).

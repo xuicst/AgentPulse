@@ -1,5 +1,7 @@
 src/**
 tools/**
+config/**
+docs/**
 node_modules/**
 
 .git/**
@@ -19,6 +21,6 @@ scripts/verify-native-helper.cjs
 **/obj/**
 **/bin/**
 
+resources/win32-*/**
 resources/darwin-*/**
-resources/linux-*/**
-resources/win32-x64/toast-bridge/**
+resources/linux-arm64/**

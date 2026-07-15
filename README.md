@@ -2,7 +2,7 @@
 
 > A VS Code extension that sends local desktop notifications when Claude Code or Codex needs permission, finishes, fails, or is cancelled.
 
-[English](README.md) | [简体中文](README.zh-CN.md) | [Français](README.fr.md) | [Русский](README.ru.md) | [Español](README.es.md)
+[English](README.md) | [简体中文](docs/language/README.zh-CN.md) | [Français](docs/language/README.fr.md) | [Русский](docs/language/README.ru.md) | [Español](docs/language/README.es.md)
 
 AgentPulse helps you stay aware of your AI Agent while you work elsewhere. It processes Hook events locally and never sends their contents over the network.
 

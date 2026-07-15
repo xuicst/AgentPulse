@@ -2,7 +2,7 @@
   "name": "AgentPulse",
   "displayName": "AgentPulse",
   "description": "AI Agent Notification Framework for VSCode",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "publisher": "xuicst",
   "icon": "resources/icon.png",
   "license": "MIT",
@@ -140,11 +140,11 @@
     "package:prepare": "npm run check && npm run compile",
     "package:native": "node scripts/build-native-helper.cjs",
     "package": "npm run package:win32-x64",
-    "package:win32-x64": "npm run package:prepare && npm run package:native && node scripts/verify-native-helper.cjs win32-x64 && vsce package --target win32-x64 --ignoreFile .vscodeignore.win32-x64",
-    "package:darwin-x64": "npm run package:prepare && vsce package --target darwin-x64 --ignoreFile .vscodeignore.darwin-x64",
-    "package:darwin-arm64": "npm run package:prepare && vsce package --target darwin-arm64 --ignoreFile .vscodeignore.darwin-arm64",
-    "package:linux-x64": "npm run package:prepare && npm run package:native && node scripts/verify-native-helper.cjs linux-x64 && vsce package --target linux-x64 --ignoreFile .vscodeignore.linux-x64",
-    "package:linux-arm64": "npm run package:prepare && npm run package:native && node scripts/verify-native-helper.cjs linux-arm64 && vsce package --target linux-arm64 --ignoreFile .vscodeignore.linux-arm64"
+    "package:win32-x64": "npm run package:prepare && npm run package:native && node scripts/verify-native-helper.cjs win32-x64 && vsce package --target win32-x64 --ignoreFile config/vsce/win32-x64.ignore",
+    "package:darwin-x64": "npm run package:prepare && vsce package --target darwin-x64 --ignoreFile config/vsce/darwin-x64.ignore",
+    "package:darwin-arm64": "npm run package:prepare && vsce package --target darwin-arm64 --ignoreFile config/vsce/darwin-arm64.ignore",
+    "package:linux-x64": "npm run package:prepare && npm run package:native && node scripts/verify-native-helper.cjs linux-x64 && vsce package --target linux-x64 --ignoreFile config/vsce/linux-x64.ignore",
+    "package:linux-arm64": "npm run package:prepare && npm run package:native && node scripts/verify-native-helper.cjs linux-arm64 && vsce package --target linux-arm64 --ignoreFile config/vsce/linux-arm64.ignore"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

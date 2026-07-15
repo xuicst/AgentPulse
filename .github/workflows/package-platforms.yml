@@ -18,23 +18,23 @@ jobs:
         include:
           - os: windows-latest
             target: win32-x64
-            ignore_file: .vscodeignore.win32-x64
+            ignore_file: config/vsce/win32-x64.ignore
             native_helper: true
           - os: macos-15-intel
             target: darwin-x64
-            ignore_file: .vscodeignore.darwin-x64
+            ignore_file: config/vsce/darwin-x64.ignore
             native_helper: false
           - os: macos-15
             target: darwin-arm64
-            ignore_file: .vscodeignore.darwin-arm64
+            ignore_file: config/vsce/darwin-arm64.ignore
             native_helper: false
           - os: ubuntu-latest
             target: linux-x64
-            ignore_file: .vscodeignore.linux-x64
+            ignore_file: config/vsce/linux-x64.ignore
             native_helper: true
           - os: ubuntu-24.04-arm
             target: linux-arm64
-            ignore_file: .vscodeignore.linux-arm64
+            ignore_file: config/vsce/linux-arm64.ignore
             native_helper: true
 
     steps:

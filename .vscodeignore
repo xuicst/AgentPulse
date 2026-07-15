@@ -1,5 +1,7 @@
 src/**
 tools/**
+config/**
+docs/**
 node_modules/**
 
 .git/**

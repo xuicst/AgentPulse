@@ -2,7 +2,7 @@
 
 > 当 Claude Code 或 Codex 需要授权、完成、失败或取消时，向本机桌面发送通知的 VS Code 扩展。
 
-[English](README.md) | [简体中文](README.zh-CN.md) | [Français](README.fr.md) | [Русский](README.ru.md) | [Español](README.es.md)
+[English](../../README.md) | [简体中文](README.zh-CN.md) | [Français](README.fr.md) | [Русский](README.ru.md) | [Español](README.es.md)
 
 AgentPulse 让你离开编辑器或在处理其他工作时，也能及时知道 AI Agent 是否需要你的操作。它只在本机处理 Hook 事件，不会把事件内容发送到网络。
 
@@ -139,4 +139,4 @@ GitHub Actions 会在对应的原生 runner 上构建五种平台包。打包输
 
 ## 许可证
 
-本项目采用 [MIT License](LICENSE)。
+本项目采用 [MIT License](../../LICENSE)。
